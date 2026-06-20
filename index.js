@@ -29,7 +29,7 @@ const client = new Client({
 client.once('ready', async () => {
   console.log(`${BOT_NAME} giriş yaptı: ${client.user.tag}`);
   updateStatus();
-  setInterval(updateStatus, 30000); // 5sn -> 30sn (Discord rate limit'e takılmamak için)
+  setInterval(updateStatus, 20000); // 5sn -> 30sn (Discord rate limit'e takılmamak için)
   await registerSlashCommand();
 });
 
