@@ -1,5 +1,5 @@
 import express from 'express';
-import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
+import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import Gamedig from 'gamedig';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -9,6 +9,9 @@ const SERVER_HOST = '185.193.165.33';
 const SERVER_PORT = 27015;
 const SERVER_IP_TEXT = `${SERVER_HOST}:${SERVER_PORT}`;
 const BOT_NAME = 'Nova';
+
+// /aktif komutunu kullanabilecek rol ID'leri (Discord'da Geliştirici Modu açıp role sağ tık -> ID Kopyala)
+const ALLOWED_ROLE_IDS = ['1345718959550365708'];
 
 // ===== UPTIME (Render/UptimeRobot) =====
 const app = express();
@@ -76,9 +79,10 @@ client.on('messageCreate', (message) => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName === 'aktif') {
-    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    const hasAllowedRole = interaction.member?.roles?.cache?.some(role => ALLOWED_ROLE_IDS.includes(role.id));
+    if (!hasAllowedRole) {
       return interaction.reply({
-        content: '❌ Bu komutu sadece yöneticiler kullanabilir.',
+        content: '❌ Bu komutu kullanma yetkin yok.',
         ephemeral: true
       });
     }
@@ -109,7 +113,6 @@ async function registerSlashCommand() {
     new SlashCommandBuilder()
       .setName('aktif')
       .setDescription('Sunucunun aktif olduğunu herkese duyurur.')
-      .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   ].map(command => command.toJSON());
 
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
