@@ -1,5 +1,5 @@
 import express from 'express';
-import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder } from 'discord.js';
+import { Client, GatewayIntentBits, Partials, REST, Routes, SlashCommandBuilder, PermissionFlagsBits } from 'discord.js';
 import Gamedig from 'gamedig';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -29,7 +29,7 @@ const client = new Client({
 client.once('ready', async () => {
   console.log(`${BOT_NAME} giriş yaptı: ${client.user.tag}`);
   updateStatus();
-  setInterval(updateStatus, 20000); // 5sn -> 30sn (Discord rate limit'e takılmamak için)
+  setInterval(updateStatus, 30000); // 5sn -> 30sn (Discord rate limit'e takılmamak için)
   await registerSlashCommand();
 });
 
@@ -76,6 +76,12 @@ client.on('messageCreate', (message) => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   if (interaction.commandName === 'aktif') {
+    if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+      return interaction.reply({
+        content: '❌ Bu komutu sadece yöneticiler kullanabilir.',
+        ephemeral: true
+      });
+    }
     try {
       const state = await Gamedig.query({
         type: 'csgo',
@@ -103,6 +109,7 @@ async function registerSlashCommand() {
     new SlashCommandBuilder()
       .setName('aktif')
       .setDescription('Sunucunun aktif olduğunu herkese duyurur.')
+      .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
   ].map(command => command.toJSON());
 
   const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
